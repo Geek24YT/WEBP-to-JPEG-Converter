@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebP to JPEG Converter</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+      h1 {
+        color: #333;
+      }
+      .dropzone {
+        border: 2px dashed #007bff;
+        border-radius: 10px;
+        width: 300px;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        margin: 20px 0;
+        transition: background-color 0.3s;
+      }
+      .dropzone:hover {
+        background-color: #e9f3ff;
+      }
+      .dz-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      }
+      .dz-image img {
+        max-width: 100px;
+        margin-top: 10px;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Convert WebP to JPEG</h1>
+
+    <form
+      class="dropzone"
+      id="myDropzone"
+      action="#"
+      style="width: 300px; height: 200px"
+    >
+      <div class="dz-message">
+        Drag & Drop WebP File Here or Click to Upload
+      </div>
+    </form>
+    <div id="preview"></div>
+
+    <canvas id="canvas" style="display: none"></canvas>
+    <button id="downloadBtn" style="display: none">Download JPEG</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+    <script>
+      // Disable auto processing as we will handle it manually
+      Dropzone.autoDiscover = false;
+
+      // Initialize the dropzone
+      const myDropzone = new Dropzone("#myDropzone", {
+        url: "#", // URL is not needed since we're not actually uploading
+        autoProcessQueue: false,
+        acceptedFiles: "image/webp",
+        init: function () {
+          this.on("addedfile", function (file) {
+            if (file.type !== "image/webp") {
+              alert("Please upload a valid WebP file.");
+              this.removeFile(file);
+              return;
+            }
+
+            // Simulate file upload progress
+            let progress = 0;
+            const interval = setInterval(() => {
+              progress += 10;
+              if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                this.emit("complete", file); // Mark file as complete
+              }
+              this.emit("uploadprogress", file, progress); // Update progress
+            }, 100); // Increment progress every 100ms
+
+            // Create a FileReader to read the file and preview it
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              const img = new Image();
+              img.src = e.target.result;
+
+              img.onload = function () {
+                // Set canvas dimensions to match the image
+                const canvas = document.getElementById("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                // Draw the image on the canvas
+                ctx.drawImage(img, 0, 0);
+
+                // Show download button
+                const downloadBtn = document.getElementById("downloadBtn");
+                downloadBtn.style.display = "block";
+              };
+            };
+            reader.readAsDataURL(file);
+          });
+        },
+      });
+
+      // Download JPEG functionality
+      document
+        .getElementById("downloadBtn")
+        .addEventListener("click", function () {
+          const canvas = document.getElementById("canvas");
+          const jpegDataUrl = canvas.toDataURL("image/jpeg");
+
+          // Create a link element to trigger the download
+          const link = document.createElement("a");
+          link.href = jpegDataUrl;
+          link.download = "converted-image.jpg";
+          link.click();
+        });
+    </script>
+  </body>
+</html>
